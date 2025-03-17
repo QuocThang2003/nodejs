@@ -10,4 +10,7 @@ const TourSchema = new mongoose.Schema({
     img: { type: String }
 }, { timestamps: true });
 
-module.exports = mongoose.model("Tour", TourSchema);
+// ⚡ Kiểm tra model trước khi khởi tạo
+const Tour = mongoose.models.Tour || mongoose.model("Tour", TourSchema);
+
+module.exports = Tour;

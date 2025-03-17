@@ -1,26 +1,22 @@
-const Payment = require("../models/payment");
 const Booking = require("../models/Booking");
-const Tour = require("../models/tour");
-const paymentService = require("../services/paymentService");
 
-const paymentController = {
-    createBooking: async (req, res) => {
-        try {
-            const { tourId, quantity } = req.body;
-            const userId = req.user.id;
+exports.paymentReturn = async (req, res) => {
+    const vnpParams = req.query;
+    const secureHash = vnpParams["vnp_SecureHash"];
+    delete vnpParams["vnp_SecureHash"];
 
-            // ✅ Gọi service xử lý đặt tour
-            const booking = await paymentService.processBooking(userId, tourId, quantity);
+    // Kiểm tra tính hợp lệ của thanh toán
+    if (vnpParams["vnp_ResponseCode"] === "00") {
+        const newBooking = new Booking({
+            userId: req.user.id,
+            tourId: vnpParams["vnp_TxnRef"],
+            total: vnpParams["vnp_Amount"] / 100, // Chia 100 để về VNĐ
+            status: "Paid"
+        });
 
-            // ✅ Tạo URL thanh toán VNPay
-            const vnpUrl = await paymentService.createVNPayUrl(booking);
-
-            res.status(200).json({ message: "Chuyển đến VNPay để thanh toán", paymentUrl: vnpUrl });
-        } catch (error) {
-            res.status(500).json({ message: "Lỗi hệ thống", error: error.message });
-        }
+        await newBooking.save();
+        res.json({ message: "Thanh toán thành công! Đơn đặt tour đã được lưu." });
+    } else {
+        res.status(400).json({ error: "Thanh toán thất bại!" });
     }
 };
-
-
-module.exports = paymentController;

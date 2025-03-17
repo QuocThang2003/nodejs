@@ -1,7 +1,35 @@
 const Booking = require("../models/Booking");
 const Tour = require("../models/tour");
+const vnpayService = require("../services/vnpayService");
 
-exports.createBooking = async (userId, tourId, quantity) => {
+exports.getAllBookings = async () => {
+    try {
+        const bookings = await Booking.find()
+            .populate("userId", "username") // Lấy thông tin username từ User
+            .populate("tourId", "name price"); // Lấy tên và giá tour
+
+        return { status: 200, data: { message: "Lấy danh sách đặt tour thành công!", bookings } };
+    } catch (error) {
+        return { status: 500, data: { error: "Lỗi khi lấy danh sách đặt tour!" } };
+    }
+};
+
+exports.getBookingById = async (bookingId) => {
+    try {
+        const booking = await Booking.findById(bookingId)
+            .populate("userId", "username")
+            .populate("tourId", "name price");
+
+        if (!booking) {
+            return { status: 404, data: { error: "Không tìm thấy đơn đặt tour!" } };
+        }
+
+        return { status: 200, data: { message: "Lấy thông tin đơn đặt tour thành công!", booking } };
+    } catch (error) {
+        return { status: 500, data: { error: "Lỗi khi lấy đơn đặt tour!" } };
+    }
+};
+exports.createPaymentUrl = async (userId, tourId, quantity, req) => {
     if (!tourId || !quantity || quantity <= 0) {
         return { status: 400, data: { error: "Thông tin không hợp lệ!" } };
     }
@@ -12,13 +40,15 @@ exports.createBooking = async (userId, tourId, quantity) => {
     }
 
     const total = tour.price * quantity;
-    const newBooking = new Booking({
-        userId,
-        tourId,
-        total,
-        status: "Pending"
-    });
 
-    await newBooking.save();
-    return { status: 201, data: { message: "Đặt tour thành công!", booking: newBooking } };
+    // Gọi VNPay để tạo URL thanh toán
+    const paymentUrl = await vnpayService.createPaymentUrl(total, req);
+
+    return {
+        status: 200,
+        data: {
+            message: "Tạo URL thanh toán thành công!",
+            paymentUrl
+        }
+    };
 };

@@ -23,3 +23,19 @@ exports.isAdmin = (req, res, next) => {
     }
     next();
 };
+
+// Middleware kiểm tra quyền Employee
+exports.isEmployee = (req, res, next) => {
+    if (!req.user || req.user.role !== "employee") {
+        return res.status(403).json({ message: "Truy cập bị từ chối. Chỉ Employee có quyền thực hiện thao tác này." });
+    }
+    next();
+};
+
+// Middleware kiểm tra quyền Admin hoặc Employee
+exports.isAdminOrEmployee = (req, res, next) => {
+    if (!req.user || (req.user.role !== "admin" && req.user.role !== "employee")) {
+        return res.status(403).json({ message: "Truy cập bị từ chối. Chỉ Admin hoặc Employee có quyền thực hiện thao tác này." });
+    }
+    next();
+};

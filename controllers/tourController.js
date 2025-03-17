@@ -55,3 +55,20 @@ exports.deleteTour = async (req, res) => {
         res.status(500).json({ message: "Lỗi server", error: error.message });
     }
 };
+exports.getAllTourDetail = async (req, res) => {
+    try {
+        const tours = await tourService.getAllTourDetail();
+        res.status(200).json(tours);
+    } catch (error) {
+        console.error("❌ Lỗi khi lấy danh sách tour:", error);
+        res.status(500).json({ message: "Lỗi server khi lấy danh sách tour!" });
+    }
+};
+exports.searchTours = async (req, res) => {
+    try {
+        const tours = await tourService.searchTours(req.query);
+        res.json(tours);
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi server", error: error.message });
+    }
+};

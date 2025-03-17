@@ -49,7 +49,7 @@ const loginUser = async (email, password) => {
         throw new Error("Email hoặc mật khẩu không đúng");
     }
 
-    console.log("✅ Tìm thấy user:", user);
+    console.log("✅ Tìm thấy user:", user.fullName);
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -57,10 +57,18 @@ const loginUser = async (email, password) => {
         throw new Error("Email hoặc mật khẩu không đúng");
     }
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" });
-    console.log("✅ Đăng nhập thành công, token:", token);
+    const token = jwt.sign(
+        { id: user._id, fullName: user.fullName }, 
+        JWT_SECRET, 
+        { expiresIn: "1h" }
+    );
+    console.log(`✅ Đăng nhập thành công! User: ${user.fullName}, Token: ${token}`);
 
-    return { message: "Đăng nhập thành công", token };
+    return { message: `Đăng nhập thành công! Xin chào, ${user.fullName}`, token, user };
 };
 
-module.exports = { registerUser, loginUser };
+const logoutUser = async () => {
+    return { message: "Đăng xuất thành công!" }; 
+};
+
+module.exports = { registerUser, loginUser,logoutUser };

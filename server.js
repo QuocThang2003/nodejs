@@ -7,6 +7,10 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const tourRoutes = require("./routes/tourRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const userRoutes = require("./routes/userRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
+const itineraryRoutes = require("./routes/itineraryRoutes");
+const forgetPasswordRoutes = require("./routes/forgetPasswordRoutes");
+
 
 const app = express();
 
@@ -36,7 +40,10 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/tours", tourRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/users", userRoutes); 
-app.use("/api/booking", bookingRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/itineraries", itineraryRoutes);
+app.use("/api/forgetpass", forgetPasswordRoutes);
 
 // Middleware xử lý lỗi
 app.use((err, req, res, next) => {
