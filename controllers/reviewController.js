@@ -29,25 +29,14 @@ exports.createReview = async (req, res) => {
             return res.status(401).json({ error: "Bạn cần đăng nhập để đánh giá!" });
         }
 
-        // Kiểm tra xem tourId có tồn tại không
-        if (!tourId) {
-            return res.status(400).json({ error: "Thiếu tourId!" });
-        }
-
-        // Kiểm tra xem bookingId có tồn tại không
-        if (!bookingId) {
-            return res.status(400).json({ error: "Thiếu bookingId!" });
-        }
-
         // Gọi service để tạo review
         const response = await reviewService.createReview(userId, tourId, bookingId, rating, reviewText);
         res.status(response.status).json(response.data);
     } catch (error) {
-        console.error("🔥 Lỗi đánh giá:", error); // In toàn bộ lỗi
-        res.status(500).json({ error: "Lỗi server khi đánh giá tour!", details: error.message });
+        console.error("🔥 Lỗi đánh giá:", error.message);
+        res.status(500).json({ error: "Lỗi server khi đánh giá tour!" });
     }
 };
-
 
 // ⚡ API tính rating trung bình
 exports.getAverageRating = async (req, res) => {
@@ -57,5 +46,23 @@ exports.getAverageRating = async (req, res) => {
         res.status(200).json(ratingData);
     } catch (error) {
         res.status(500).json({ error: "Lỗi server khi tính rating trung bình!" });
+    }
+};
+// Thêm endpoint để kiểm tra xem người dùng có thể đánh giá không (tùy chọn)
+exports.checkUserCanReview = async (req, res) => {
+    try {
+        const { tourId } = req.params;
+        const { bookingId } = req.query; // Lấy bookingId từ query
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({ error: "Bạn cần đăng nhập để kiểm tra!" });
+        }
+
+        const result = await reviewService.checkUserCanReview(userId, tourId, bookingId);
+        res.status(200).json(result);
+    } catch (error) {
+        console.error("🔥 Lỗi kiểm tra điều kiện đánh giá:", error.message);
+        res.status(500).json({ error: "Lỗi server khi kiểm tra điều kiện đánh giá!" });
     }
 };

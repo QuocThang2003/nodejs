@@ -27,14 +27,13 @@ const login = async (req, res) => {
 };
 const logout = async (req, res) => {
     try {
-        const response = await logoutUser();
-        
-        res.clearCookie("token"); // Xóa token khỏi cookie
-        res.json(response); // Trả về thông báo JSON
+        // Chỉ cần trả về thông báo thành công khi đăng xuất
+        res.json({ message: "Đăng xuất thành công!" });
     } catch (error) {
         res.status(500).json({ message: "Lỗi khi đăng xuất" });
     }
 };
+
 
 
 module.exports = { register, login,logout };

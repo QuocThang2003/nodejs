@@ -12,12 +12,18 @@ const forgotPasswordHandler = async (req, res) => {
 
 const resetPasswordHandler = async (req, res) => {
     try {
-        const { token, password, confirmPassword } = req.body;
+        const { token, password, confirmPassword } = req.body; // 👈 Kiểm tra nếu req.body không có token
+        console.log("📢 Token nhận được từ body:", token);
+
+        if (!token) return res.status(400).json({ error: "Token không được cung cấp" });
+
         const response = await resetPassword(token, password, confirmPassword);
         res.json(response);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error("❌ Lỗi reset password:", error.message);
+        res.status(400).json({ error: error.message });
     }
 };
+;
 
 module.exports = { forgotPasswordHandler, resetPasswordHandler };

@@ -9,9 +9,23 @@ exports.getAllItineraries = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+//📌 Lấy lịch trình theo id
+exports.getItineraryById = async (req, res) => { 
+    try {
+        const itinerary = await itineraryService.getItineraryById(req.params.id);
+        if (!itinerary) {
+            return res.status(404).json({ message: "Không tìm thấy lịch trình!" });
+        }
+        res.status(200).json(itinerary);
+    } catch (error) {
+        res.status(500).json({ error: "Lỗi khi lấy chi tiết lịch trình!" });
+    }
+};
+
+
 
 // 📌 Lấy tất cả lịch trình theo tourId
-exports.getAllItineraries = async (req, res) => {
+exports.getAllItinerariesByTourId = async (req, res) => {
     const { tourId } = req.params; // Lấy tourId từ params
 
     try {

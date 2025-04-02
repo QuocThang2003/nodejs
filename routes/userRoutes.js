@@ -1,10 +1,11 @@
 const express = require("express");
 const userController = require("../controllers/userController");
-const { authenticate } = require("../middlewares/authMiddleware"); // Import middleware
+const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.get("/", userController.getUsers);
-router.get("/booktour", authenticate, userController.getUserBookings); // Xác thực token trước khi lấy lịch sử booking
+router.get("/", authMiddleware.authenticate, authMiddleware.isAdminOrEmployee, userController.getUsers);
+router.get("/booktour", authMiddleware.authenticate, userController.getUserBookings);
+router.put("/profile", authMiddleware.authenticate, userController.editProfile); // Cập nhật thông tin cá nhân
 
 module.exports = router;

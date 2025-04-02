@@ -1,61 +1,38 @@
-const nodemailer = require("nodemailer");
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 const { JWT_SECRET } = require("../config/env");
-
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
-});
-
-const sendResetPasswordEmail = async (email, token) => {
-    const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
-    const mailOptions = {
-        from: process.env.SMTP_USER,
-        to: email,
-        subject: "Đặt lại mật khẩu",
-        html: `<h2>Yêu cầu đặt lại mật khẩu</h2>
-               <p>Vui lòng nhấn vào liên kết sau để đặt lại mật khẩu:</p>
-               <a href="${resetLink}">${resetLink}</a>`
-    };
-    await transporter.sendMail(mailOptions);
-};
+const { sendResetPasswordEmail } = require("./emailService");
 
 const forgotPassword = async (email) => {
-    try {
-        const user = await User.findOne({ email });
+    const user = await User.findOne({ email });
+    if (!user) throw new Error("Email không tồn tại");
 
-        if (!user) {
-            throw new Error("Email không tồn tại");
-        }
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "15m" });
+    await sendResetPasswordEmail(email, token);
 
-        // Tạo token để đặt lại mật khẩu (dùng _id của user)
-        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "15m" });
-
-        // Gửi email reset mật khẩu
-        await sendResetPasswordEmail(email, token);
-
-        return { message: "Vui lòng kiểm tra email để đặt lại mật khẩu." };
-    } catch (error) {
-        console.error("Lỗi forgotPassword:", error.message);
-        throw new Error("Có lỗi xảy ra, vui lòng thử lại.");
-    }
+    return { 
+        message: "Vui lòng kiểm tra email để đặt lại mật khẩu.", 
+        token // ✅ Trả về token trong response
+    };
 };
 
-
 const resetPassword = async (token, password, confirmPassword) => {
+    console.log("📢 Token nhận được:", token); // ✅ Debug token
+
+    if (!token) {
+        console.log("❌ Lỗi: Token không tồn tại");
+        throw new Error("Token không được cung cấp");
+    }
+
     if (password !== confirmPassword) throw new Error("Mật khẩu xác nhận không khớp");
 
     let decoded;
     try {
         decoded = jwt.verify(token, JWT_SECRET);
+        console.log("✅ Token hợp lệ:", decoded);
     } catch (error) {
+        console.log("❌ Token không hợp lệ:", error.message);
         throw new Error("Token không hợp lệ hoặc đã hết hạn");
     }
 
@@ -64,5 +41,6 @@ const resetPassword = async (token, password, confirmPassword) => {
 
     return { message: "Mật khẩu đã được đặt lại thành công." };
 };
+
 
 module.exports = { forgotPassword, resetPassword };

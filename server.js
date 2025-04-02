@@ -1,56 +1,84 @@
 require("dotenv").config();
 const express = require("express");
+const passport = require("passport");
+const session = require("express-session");
+const cors = require("cors");
 const { connectDB } = require("./config/db");
+
+// Import Routes
 const authRoutes = require("./routes/authRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
-const paymentRoutes = require("./routes/paymentRoutes");
 const tourRoutes = require("./routes/tourRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const userRoutes = require("./routes/userRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const itineraryRoutes = require("./routes/itineraryRoutes");
 const forgetPasswordRoutes = require("./routes/forgetPasswordRoutes");
+const googleloginRoutes = require("./routes/googleloginRoutes");
+const contactRoutes = require("./routes/contactRoutes");
 
-
-const app = express();
-
-// Kết nối database
+// 🚀 Kết nối Database
 connectDB()
   .then(() => console.log("✅ Connected to database"))
   .catch((err) => {
     console.error("❌ Database connection failed:", err);
-    process.exit(1); // Dừng server nếu lỗi kết nối DB
+    process.exit(1);
   });
 
-// Middleware
-app.use(express.json()); // Đọc dữ liệu JSON từ request
-const cors = require("cors");
-app.use("/uploads", express.static("uploads")); // Hỗ trợ cung cấp ảnh từ thư mục uploads
-app.use(cors());
+const app = express();
 
-// Debug log
+// 📌 Cấu hình session (CẦN CHO PASSPORT)
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "mysecret",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+
+// 🛠 Import Passport và cấu hình chiến lược Google
+require("./config/passport");
+
+// 📌 Middleware CORS
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Chỉ định frontend
+    credentials: true, // Quan trọng để gửi cookie/token qua request
+  })
+);
+
+// 📌 Middleware khác
+app.use(express.json());
+app.use("/uploads", express.static("uploads"));
+
+// 🚀 Khởi tạo Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// 🛠 Debug log (In ra request để kiểm tra)
 app.use((req, res, next) => {
   console.log(`📩 [${req.method}] ${req.path}`, req.body);
   next();
 });
 
-// Routes
+// 🔗 Định tuyến API
 app.use("/api/auth", authRoutes);
-app.use("/api/payment", paymentRoutes);
 app.use("/api/tours", tourRoutes);
 app.use("/api/employees", employeeRoutes);
-app.use("/api/users", userRoutes); 
+app.use("/api/users", userRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/itineraries", itineraryRoutes);
 app.use("/api/forgetpass", forgetPasswordRoutes);
+app.use("/auth/google", googleloginRoutes);
+app.use("/api/contact", contactRoutes);
 
-// Middleware xử lý lỗi
+// 🛠 Middleware xử lý lỗi
 app.use((err, req, res, next) => {
   console.error("🔥 Error:", err.message);
   res.status(500).json({ error: "Internal Server Error" });
 });
 
-// Khởi động server
+// 🚀 Chạy server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));

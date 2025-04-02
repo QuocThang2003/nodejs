@@ -14,6 +14,9 @@ exports.getAllItinerariesByTourId = async (tourId) => {
     }
 };
 
+exports.getItineraryById = async (id) => {
+    return await Itinerary.findById(id);
+};
 exports.createItinerary = async (data) => {
     return await Itinerary.create(data);
 };

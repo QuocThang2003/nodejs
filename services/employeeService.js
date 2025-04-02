@@ -38,6 +38,16 @@ class EmployeeService {
 
         return { token, role: employee.role };
     }
+    //Đăng xuất
+    async Logout(){
+        return {message: "Đăng xuất thành công!"};
+    }
+     // Lấy danh sách tất cả nhân viên
+     async getAllEmployees() {
+        const employees = await Employee.find().select("-password"); // Exclude password
+        if (!employees) throw new Error("Không có nhân viên nào");
+        return employees;
+    }
 
     // Lấy thông tin tài khoản
     async getEmployeeById(id) {
@@ -58,7 +68,19 @@ class EmployeeService {
 
         return { message: employee.isActive ? "Tài khoản đã được mở khóa" : "Tài khoản đã bị khóa", employee };
     }
+     // Xóa nhân viên (Chỉ Admin)
+     async deleteEmployee(id, adminId) {
+        const employee = await Employee.findById(id);
+        if (!employee) throw new Error("Tài khoản không tồn tại");
+
+        if (adminId === id) throw new Error("Bạn không thể tự xóa tài khoản của mình");
+
+        await Employee.findByIdAndDelete(id);
+        return { message: "Xóa nhân viên thành công" };
+    }
 }
+   
+
 
 module.exports = new EmployeeService();
 

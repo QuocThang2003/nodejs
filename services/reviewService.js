@@ -27,9 +27,16 @@ exports.getAllReviews = async (tourId) => {
 
 exports.createReview = async (userId, tourId, bookingId, rating, reviewText) => {
     try {
+        // In ra để kiểm tra dữ liệu nhận từ client
+        console.log("📌 Booking ID nhận từ client:", bookingId);
+        console.log("📌 User ID nhận từ client:", userId);
+        console.log("📌 Tour ID nhận từ client:", tourId);
+
         // Kiểm tra xem booking có tồn tại không
-        const booking = await Booking.findOne({ _id: bookingId, userId, tourId, status: "Pending" });
+        const booking = await Booking.findOne({ _id: bookingId, userId, tourId, status: "Paid" });
+
         if (!booking) {
+            console.log("❌ Không tìm thấy booking hợp lệ trong DB:", { bookingId, userId, tourId });
             return { status: 400, data: { error: "Bạn chỉ có thể đánh giá sau khi thanh toán!" } };
         }
 
@@ -43,6 +50,7 @@ exports.createReview = async (userId, tourId, bookingId, rating, reviewText) => 
         const newReview = new Review({ userId, tourId, bookingId, rating, reviewText });
         await newReview.save();
 
+        console.log("✅ Đánh giá thành công:", newReview);
         return { status: 201, data: { message: "Đánh giá thành công!", review: newReview } };
     } catch (error) {
         console.error("🔥 Lỗi trong service:", error); // Log lỗi chi tiết
@@ -84,5 +92,44 @@ exports.getAverageRating = async (tourId) => {
     } catch (error) {
         console.log("Lỗi khi tính toán rating trung bình:", error);
         return { error: "Lỗi server khi tính toán rating trung bình!" };
+    }
+};
+// Hàm kiểm tra xem người dùng có thể đánh giá không
+exports.checkUserCanReview = async (userId, tourId, bookingId) => {
+    try {
+        // Kiểm tra xem booking có tồn tại và hợp lệ không
+        const booking = await Booking.findOne({
+            _id: bookingId,
+            userId,
+            tourId,
+            status: "Paid",
+        });
+
+        if (!booking) {
+            return {
+                canReview: false,
+                message: "Bạn chỉ có thể đánh giá sau khi thanh toán!",
+            };
+        }
+
+        // Kiểm tra xem người dùng đã đánh giá tour này chưa
+        const existingReview = await Review.findOne({ userId, tourId });
+        if (existingReview) {
+            return {
+                canReview: false,
+                message: "Bạn đã đánh giá tour này rồi!",
+            };
+        }
+
+        return {
+            canReview: true,
+            message: "Bạn có thể đánh giá tour này.",
+        };
+    } catch (error) {
+        console.error("🔥 Lỗi khi kiểm tra điều kiện đánh giá:", error);
+        return {
+            canReview: false,
+            message: "Lỗi server khi kiểm tra điều kiện đánh giá!",
+        };
     }
 };

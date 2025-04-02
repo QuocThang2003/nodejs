@@ -28,6 +28,21 @@ const userController = {
         } catch (error) {
             res.status(500).json({ message: "Lỗi server: " + error.message });
         }
+    },
+    editProfile: async (req, res) => {
+        try {
+            const userId = req.user?.id; // Lấy userId từ middleware authenticate
+            if (!userId) {
+                return res.status(401).json({ message: "Bạn cần đăng nhập để chỉnh sửa thông tin cá nhân." });
+            }
+
+            const { fullName, phone, address } = req.body;
+            const result = await userService.editProfile(userId, fullName, phone, address);
+
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
     }
     
 };

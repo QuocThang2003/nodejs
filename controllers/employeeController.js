@@ -25,6 +25,24 @@ exports.loginEmployee = async (req, res) => {
     }
 };
 
+exports.logoutEmployee = async (req, res) => {
+    try {
+        // Chỉ cần trả về thông báo thành công khi đăng xuất
+        res.json({ message: "Đăng xuất thành công!" });
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi khi đăng xuất" });
+    }
+};
+
+exports.getAllEmployees = async (req, res) => {
+    try {
+        const employees = await employeeService.getAllEmployees();
+        res.json(employees);
+    } catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+};
+
 
 exports.getEmployeeById = async (req, res) => {
     try {
@@ -38,6 +56,17 @@ exports.getEmployeeById = async (req, res) => {
 exports.toggleEmployeeStatus = async (req, res) => {
     try {
         const result = await employeeService.toggleEmployeeStatus(req.params.id, req.user.id);
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+// Xóa nhân viên
+exports.deleteEmployee = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user.id; // ID của Admin từ token
+        const result = await employeeService.deleteEmployee(id, adminId);
         res.json(result);
     } catch (error) {
         res.status(400).json({ message: error.message });
