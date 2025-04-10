@@ -7,10 +7,13 @@ const TourSchema = new mongoose.Schema({
     quantity: { type: Number, required: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
-    img: { type: String }
+    img: { type: String },
+    category: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "Category",
+        required: true 
+    }
 }, { timestamps: true });
 
-// ⚡ Kiểm tra model trước khi khởi tạo
 const Tour = mongoose.models.Tour || mongoose.model("Tour", TourSchema);
-
 module.exports = Tour;

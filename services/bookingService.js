@@ -4,27 +4,38 @@ const Payment = require("../models/payment");
 const vnPayService = require("./vnpayService");
 exports.getAllBookings = async () => {
     try {
-        let bookings = await Booking.find()
-            .populate({ path: "userId", select: "fullName" }) // Lấy tên đầy đủ từ User
-            .populate({ path: "tourId", select: "tourName price" }) // Lấy tourName từ Tour
-            .lean(); // Chuyển dữ liệu thành object thuần túy
+        console.log("Fetching all bookings...");
 
-        // Định dạng dữ liệu trả về
-        bookings = bookings.map(booking => ({
-            _id: booking._id,
-            fullname: booking.userId?.fullName || "Unknown", // Lấy fullName
-            tourName: booking.tourId?.tourName || "Unknown", // Lấy tourName
-            price: booking.tourId?.price || 0, // Lấy giá tour
-            total: booking.total,
-            status: booking.status,
-            bookingDate: booking.bookingDate,
-            createdAt: booking.createdAt,
-            updatedAt: booking.updatedAt
-        }));
+        let bookings = await Booking.find()
+            .populate({ path: "userId", select: "fullName" })
+            .populate({ path: "tourId", select: "tourName price" })
+            .lean();
+
+        console.log("Bookings fetched:", bookings);
+
+        bookings = bookings.map(booking => {
+            console.log("Processing booking:", booking);
+            return {
+                _id: booking._id,
+                userId: booking.userId?._id.toString() || "Unknown",
+                fullname: booking.userId?.fullName || "Unknown",
+                tourId: booking.tourId?._id.toString() || "Unknown",
+                tourName: booking.tourId?.tourName || "Unknown",
+                price: booking.tourId?.price || 0,
+                total: booking.total,
+                status: booking.status,
+                bookingDate: booking.bookingDate,
+                createdAt: booking.createdAt,
+                updatedAt: booking.updatedAt
+            };
+        });
+
+        console.log("Formatted bookings:", bookings);
 
         return { status: 200, data: { message: "Lấy danh sách đặt tour thành công!", bookings } };
     } catch (error) {
-        return { status: 500, data: { error: "Lỗi khi lấy danh sách đặt tour!" } };
+        console.error("Error in getAllBookings:", error);
+        return { status: 500, data: { error: "Lỗi khi lấy danh sách đặt tour!", details: error.message } };
     }
 };
 
@@ -60,7 +71,8 @@ exports.getBookingById = async (bookingId) => {
 };
 
 exports.createBooking = async (userId, tourId, quantity) => {
-    if (!tourId || !quantity || quantity <= 0) {
+    // Kiểm tra tất cả các tham số đầu vào, bao gồm userId
+    if (!userId || !tourId || !quantity || quantity <= 0) {
         return { status: 400, data: { error: "Thông tin không hợp lệ!" } };
     }
 

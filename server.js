@@ -4,6 +4,9 @@ const passport = require("passport");
 const session = require("express-session");
 const cors = require("cors");
 const { connectDB } = require("./config/db");
+const http = require("http");
+const { Server } = require("socket.io");
+const initializeSocket = require("./socket"); // Import logic Socket.IO
 
 // Import Routes
 const authRoutes = require("./routes/authRoutes");
@@ -16,6 +19,7 @@ const itineraryRoutes = require("./routes/itineraryRoutes");
 const forgetPasswordRoutes = require("./routes/forgetPasswordRoutes");
 const googleloginRoutes = require("./routes/googleloginRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 
 // 🚀 Kết nối Database
 connectDB()
@@ -26,6 +30,14 @@ connectDB()
   });
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
 
 // 📌 Cấu hình session (CẦN CHO PASSPORT)
 app.use(
@@ -42,8 +54,8 @@ require("./config/passport");
 // 📌 Middleware CORS
 app.use(
   cors({
-    origin: "http://localhost:3000", // Chỉ định frontend
-    credentials: true, // Quan trọng để gửi cookie/token qua request
+    origin: "http://localhost:3000",
+    credentials: true,
   })
 );
 
@@ -72,6 +84,10 @@ app.use("/api/itineraries", itineraryRoutes);
 app.use("/api/forgetpass", forgetPasswordRoutes);
 app.use("/auth/google", googleloginRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/categories", categoryRoutes);
+
+// 🛠 Khởi tạo Socket.IO
+initializeSocket(io);
 
 // 🛠 Middleware xử lý lỗi
 app.use((err, req, res, next) => {
@@ -81,4 +97,4 @@ app.use((err, req, res, next) => {
 
 // 🚀 Chạy server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));

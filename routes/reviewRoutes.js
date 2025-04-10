@@ -8,4 +8,5 @@ router.get("/average-rating/:tourId", reviewController.getAverageRating);
 router.get("/", reviewController.getAllReviews);
 router.post("/:tourId", authenticate, reviewController.createReview);
 router.get("/:tourId/check", authenticate, reviewController.checkUserCanReview);
+router.put("/edit/:reviewId", authenticate, reviewController.editReview);
 module.exports = router;

@@ -66,3 +66,20 @@ exports.checkUserCanReview = async (req, res) => {
         res.status(500).json({ error: "Lỗi server khi kiểm tra điều kiện đánh giá!" });
     }
 };
+exports.editReview = async (req, res) => {
+    try {
+        const { reviewId } = req.params;
+        const { reviewText } = req.body;
+        const userId = req.user?.id; // Lấy userId từ token (được gán bởi middleware authenticate)
+
+        if (!userId) {
+            return res.status(401).json({ error: "Bạn cần đăng nhập để chỉnh sửa!" });
+        }
+
+        const response = await reviewService.editReview(userId, reviewId, reviewText);
+        res.status(response.status).json(response.data);
+    } catch (error) {
+        console.error("🔥 Lỗi chỉnh sửa bình luận:", error.message);
+        res.status(500).json({ error: "Lỗi server khi chỉnh sửa bình luận!" });
+    }
+};
